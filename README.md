@@ -33,7 +33,7 @@ To get started, follow these steps:
 Below is the structure of the project and the purpose of each file/folder:
 
 IMDb-Analysis/
-│
+
 ├── data/                  ## Contains raw data files
 ├── analysis.py            ## Python script to analyze the IMDb database
 ├── queries/               ## SQL queries used for analysis
