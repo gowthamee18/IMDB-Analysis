@@ -2,82 +2,110 @@
 
 # IMDb Movie Database Analysis
 
-## Project Overview
-This project involves the analysis of the IMDb movie database, focusing on various aspects like movie release trends, production statistics, genre analysis, ratings, and crew information. The goal is to extract valuable insights related to movie trends, production house performance, and movie ratings that could help stakeholders in the film industry make informed decisions.
+IMDB Database Query Examples
 
-## Data Source
-The data used in this project is derived from the IMDb movie database, containing information about movies, ratings, genres, production companies, directors, actors, and more. The database includes tables such as `movie`, `genre`, `director_mapping`, `role_mapping`, `names`, and `ratings`.
+This document provides an overview of queries performed on the IMDB database. The database contains comprehensive information about movies, genres, directors, actors, ratings, and production companies. Each query demonstrates how to extract, analyze, and aggregate data from the database.
 
-## Installation & Setup
-To get started, follow these steps:
+Database Overview
 
-1. Clone the repository:
-    ```bash
-    git clone https://github.com/gowthamee18/IMDB
-    ```
+The database consists of the following tables:
+	1.	movie
+	•	Stores movie details such as id, title, year, date_published, duration, country, languages, production_company, and worlwide_gross_income.
+	2.	genre
+	•	Links movies to their genres using a composite key (movie_id, genre).
+	3.	director_mapping
+	•	Maps movies to their directors via (movie_id, name_id).
+	4.	role_mapping
+	•	Maps movies to actors/actresses and their roles via (movie_id, name_id).
+	5.	names
+	•	Contains details about people (id, name, height, date_of_birth, known_for_movies).
+	6.	ratings
+	•	Stores movie ratings such as avg_rating, total_votes, and median_rating.
 
-2. Install necessary dependencies:
-    ```bash
-    pip install -r requirements.txt
-    ```
+Query Highlights
 
-3. Set up the database:
-    - If you're using a local database, make sure to configure the database connection in the `config` file.
+Basic Statistics
+	1.	Row Counts
+Retrieves total row counts for each table.
+Example: SELECT COUNT(*) AS total_rows FROM movie;
+	2.	Nullable Columns
+Identifies nullable columns in a specific table.
+Example: SELECT column_name FROM information_schema.columns WHERE table_name = 'movie' AND is_nullable = 'YES';
 
-4. Run the analysis script:
-    ```bash
-    python analysis.py
-    ```
-## Project Structure
+Movie Analysis
+	1.	Release Trends
+Analyzes the number of movies released per year and month.
+Example: GROUP BY release_year, release_month
+	2.	Country-Specific Movie Count
+Counts movies released in the USA or India in 2019.
+Example: WHERE (country = 'USA' OR country = 'India') AND year = 2019
+	3.	Single Genre Movies
+Counts movies with only one genre.
+Example: HAVING COUNT(*) = 1
+	4.	Average Duration by Genre
+Calculates the average duration of movies for each genre.
+Example: AVG(duration) AS average_duration
 
-The project is organized as follows:
+Ratings Analysis
+	1.	Rating Extremes
+Identifies the minimum and maximum avg_rating, total_votes, and median_rating.
+Example: SELECT MIN(avg_rating), MAX(avg_rating) FROM ratings;
+	2.	Top Rated Movies
+Lists the top 10 movies based on avg_rating.
+Example: ORDER BY avg_rating DESC LIMIT 10
+	3.	Median Rating Distribution
+Groups movies by their median_rating.
+Example: GROUP BY median_rating
 
-- **data/**  
-  Contains raw data files.
+Production Company Insights
+	1.	Most Hits by Production Company
+Finds the production company with the highest number of hit movies (avg_rating > 8).
+Example: GROUP BY production_company ORDER BY hit_movie_count DESC
+	2.	Total Votes per Production Company
+Summarizes total votes received by movies of each production company.
+Example: SUM(ratings.total_votes) AS total_votes
 
-- **analysis.py**  
-  Python script to analyze the IMDb database.
+Actor and Director Analysis
+	1.	Top Actors by Ratings
+Lists actors and actresses with the highest average ratings.
+Example: WHERE country = 'India' AND role_mapping.category = 'actor'
+	2.	Top Directors
+Identifies directors with the highest number of movies and their average movie duration.
+Example: GROUP BY name ORDER BY movie_count DESC
 
-- **queries/**  
-  Directory for SQL queries used in the analysis.
+Advanced Queries
+	1.	Rating Category Classification
+Categorizes movies based on their avg_rating into Excellent, Very Good, Good, or Average.
+Example: CASE WHEN ratings.avg_rating >= 8.5 THEN 'Excellent'
+	2.	Top Genres
+Finds the most popular genres and their associated movies.
+Example: RANK() OVER (ORDER BY COUNT(*) DESC)
+	3.	Running Total and Moving Average
+Calculates cumulative durations and moving averages for movies within a genre.
+Example: SUM(movie.duration) OVER (PARTITION BY genre ORDER BY year)
 
-- **requirements.txt**  
-  File listing the required Python dependencies.
+Correlations and Trends
+	1.	Hindi Movie Stats
+Compares average duration and ratings of Hindi movies versus others.
+Example: AVG(CASE WHEN languages LIKE '%Hindi%' THEN duration END)
+	2.	Correlation Analysis
+Computes the correlation between total_votes and avg_rating for Hindi movies.
+Example: SUM((votes - avg_votes) * (rating - avg_rating)) / COUNT(*)
 
-- **README.md**  
-  Project documentation.
+Production Analysis
+	1.	Top Grossing Movies by Year
+Lists the top 5 highest-grossing movies for the top 3 genres each year.
+Example: ROW_NUMBER() OVER (PARTITION BY year, genre ORDER BY worlwide_gross_income DESC)
+	2.	Consistent High Ratings
+Finds production companies with consistent high ratings (3+ movies rated >= 8.0 from 2017-2019).
+Example: HAVING COUNT(*) = 3
 
-- **config.py**  
-  Configuration file for database connection.
+Key Techniques Used
+	•	Aggregate Functions: COUNT, AVG, SUM, MIN, MAX
+	•	Window Functions: RANK, ROW_NUMBER, SUM() OVER, AVG() OVER
+	•	Joins: Inner joins between related tables to fetch comprehensive data.
+	•	Subqueries: Extract subsets of data for further analysis.
+	•	Conditional Aggregates: Use of CASE and HAVING for advanced filtering.
 
-## Analysis & Insights
-### Key Findings:
-- **Most Popular Genre:** Drama is the genre with the highest number of movies produced, followed by Thriller and Comedy.
-- **Trends in Movie Releases:** A majority of movies are released in the months of September, October, and November, with 2017 seeing the highest number of releases (3052 movies).
-- **Top Directors & Actors:** Directors like Balavalli Darshith Bhat and Srinivas Gundareddy have produced some of the highest-rated movies. Actors like Aamir Qureshi and Aarav Mavi lead with a 10.0 median rating.
-- **Production House Performance:** Dream Warrior Picture is the top production house based on the number of movies with an average rating above 8.
-
-## Queries
-### Sample SQL Queries Used:
-- **Query to find the total number of rows in each table:**
-    ```sql
-    SELECT COUNT(*) FROM movie;
-    ```
-- **Query to determine the number of movies released in the USA or India in 2019:**
-    ```sql
-    SELECT COUNT(*) FROM movie WHERE (country = 'USA' OR country = 'India') AND year = 2019;
-    ```
-- **Query to calculate the average movie duration by genre:**
-    ```sql
-    SELECT genre, AVG(duration) 
-    FROM movie 
-    JOIN genre ON movie.id = genre.movie_id 
-    GROUP BY genre;
-    ```
-
-## Recommendations
-Based on the analysis, here are some recommendations for movie production companies:
-- **Focus on Thrillers:** Thriller is a popular genre with a substantial number of high-rated movies. Producing more content in this genre could attract larger audiences.
-- **Increase Multi-Genre Production:** Movies that belong to more than one genre tend to perform better. Producers should consider blending multiple genres in their projects.
-- **Leverage High-Rated Directors:** Directors like Srinivas Gundareddy, who consistently deliver highly-rated films, should be prioritized for future projects.
+This set of queries provides an extensive look into leveraging SQL for analyzing and deriving insights from a complex movie database.
 
