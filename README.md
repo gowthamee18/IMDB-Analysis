@@ -1,111 +1,125 @@
-# IMDB
-
 # IMDb Movie Database Analysis
 
-IMDB Database Query Examples
+This document provides an overview of queries performed on the IMDb database. The database contains comprehensive details about movies, genres, directors, actors, ratings, and production companies.
 
-This document provides an overview of queries performed on the IMDB database. The database contains comprehensive information about movies, genres, directors, actors, ratings, and production companies. Each query demonstrates how to extract, analyze, and aggregate data from the database.
+## Database Overview
 
-Database Overview
+### Tables:
+1. **movie**: Details like `id`, `title`, `year`, `duration`, `country`, `languages`, `production_company`, `worldwide_gross_income`.
+2. **genre**: Links movies to genres (`movie_id`, `genre`).
+3. **director_mapping**: Maps movies to directors (`movie_id`, `name_id`).
+4. **role_mapping**: Maps movies to actors/actresses and their roles (`movie_id`, `name_id`).
+5. **names**: Details about people (`id`, `name`, `date_of_birth`, `known_for_movies`).
+6. **ratings**: Movie ratings including `avg_rating`, `total_votes`, `median_rating`.
 
-The database consists of the following tables:
-	1.	movie
-	•	Stores movie details such as id, title, year, date_published, duration, country, languages, production_company, and worlwide_gross_income.
-	2.	genre
-	•	Links movies to their genres using a composite key (movie_id, genre).
-	3.	director_mapping
-	•	Maps movies to their directors via (movie_id, name_id).
-	4.	role_mapping
-	•	Maps movies to actors/actresses and their roles via (movie_id, name_id).
-	5.	names
-	•	Contains details about people (id, name, height, date_of_birth, known_for_movies).
-	6.	ratings
-	•	Stores movie ratings such as avg_rating, total_votes, and median_rating.
+---
 
-Query Highlights
+## Query Highlights
 
-Basic Statistics
-	1.	Row Counts
-Retrieves total row counts for each table.
-Example: SELECT COUNT(*) AS total_rows FROM movie;
-	2.	Nullable Columns
-Identifies nullable columns in a specific table.
-Example: SELECT column_name FROM information_schema.columns WHERE table_name = 'movie' AND is_nullable = 'YES';
+### Basic Statistics
+1. **Row Counts**: `SELECT COUNT(*) AS total_rows FROM movie;`
+2. **Nullable Columns**: Identify nullable columns in a table.
+   ```sql
+   SELECT column_name
+   FROM information_schema.columns
+   WHERE table_name = 'movie' AND is_nullable = 'YES';
+   ```
 
-Movie Analysis
-	1.	Release Trends
-Analyzes the number of movies released per year and month.
-Example: GROUP BY release_year, release_month
-	2.	Country-Specific Movie Count
-Counts movies released in the USA or India in 2019.
-Example: WHERE (country = 'USA' OR country = 'India') AND year = 2019
-	3.	Single Genre Movies
-Counts movies with only one genre.
-Example: HAVING COUNT(*) = 1
-	4.	Average Duration by Genre
-Calculates the average duration of movies for each genre.
-Example: AVG(duration) AS average_duration
+### Movie Analysis
+1. **Release Trends**: Count movies released per year/month.
+   ```sql
+   GROUP BY release_year, release_month;
+   ```
+2. **Country-Specific Movie Count**: Movies in USA/India in 2019.
+   ```sql
+   WHERE (country = 'USA' OR country = 'India') AND year = 2019;
+   ```
+3. **Single Genre Movies**: Count movies with one genre.
+   ```sql
+   HAVING COUNT(*) = 1;
+   ```
+4. **Average Duration by Genre**: Calculate average duration.
+   ```sql
+   AVG(duration) AS average_duration;
+   ```
 
-Ratings Analysis
-	1.	Rating Extremes
-Identifies the minimum and maximum avg_rating, total_votes, and median_rating.
-Example: SELECT MIN(avg_rating), MAX(avg_rating) FROM ratings;
-	2.	Top Rated Movies
-Lists the top 10 movies based on avg_rating.
-Example: ORDER BY avg_rating DESC LIMIT 10
-	3.	Median Rating Distribution
-Groups movies by their median_rating.
-Example: GROUP BY median_rating
+### Ratings Analysis
+1. **Rating Extremes**: Minimum and maximum ratings.
+   ```sql
+   SELECT MIN(avg_rating), MAX(avg_rating) FROM ratings;
+   ```
+2. **Top Rated Movies**: Top 10 movies by `avg_rating`.
+   ```sql
+   ORDER BY avg_rating DESC LIMIT 10;
+   ```
+3. **Median Rating Distribution**: Group movies by `median_rating`.
+   ```sql
+   GROUP BY median_rating;
+   ```
 
-Production Company Insights
-	1.	Most Hits by Production Company
-Finds the production company with the highest number of hit movies (avg_rating > 8).
-Example: GROUP BY production_company ORDER BY hit_movie_count DESC
-	2.	Total Votes per Production Company
-Summarizes total votes received by movies of each production company.
-Example: SUM(ratings.total_votes) AS total_votes
+### Production Company Insights
+1. **Most Hits**: Companies with most hits (`avg_rating > 8`).
+   ```sql
+   GROUP BY production_company ORDER BY hit_movie_count DESC;
+   ```
+2. **Total Votes**: Sum of votes by production company.
+   ```sql
+   SUM(ratings.total_votes) AS total_votes;
+   ```
 
-Actor and Director Analysis
-	1.	Top Actors by Ratings
-Lists actors and actresses with the highest average ratings.
-Example: WHERE country = 'India' AND role_mapping.category = 'actor'
-	2.	Top Directors
-Identifies directors with the highest number of movies and their average movie duration.
-Example: GROUP BY name ORDER BY movie_count DESC
+### Actor and Director Analysis
+1. **Top Actors by Ratings**: Best-rated actors.
+   ```sql
+   WHERE country = 'India' AND role_mapping.category = 'actor';
+   ```
+2. **Top Directors**: Directors with the most movies.
+   ```sql
+   GROUP BY name ORDER BY movie_count DESC;
+   ```
 
-Advanced Queries
-	1.	Rating Category Classification
-Categorizes movies based on their avg_rating into Excellent, Very Good, Good, or Average.
-Example: CASE WHEN ratings.avg_rating >= 8.5 THEN 'Excellent'
-	2.	Top Genres
-Finds the most popular genres and their associated movies.
-Example: RANK() OVER (ORDER BY COUNT(*) DESC)
-	3.	Running Total and Moving Average
-Calculates cumulative durations and moving averages for movies within a genre.
-Example: SUM(movie.duration) OVER (PARTITION BY genre ORDER BY year)
+### Advanced Queries
+1. **Rating Category**: Classify movies by `avg_rating`.
+   ```sql
+   CASE WHEN ratings.avg_rating >= 8.5 THEN 'Excellent';
+   ```
+2. **Top Genres**: Popular genres and movies.
+   ```sql
+   RANK() OVER (ORDER BY COUNT(*) DESC);
+   ```
+3. **Moving Average**: Calculate cumulative durations.
+   ```sql
+   SUM(movie.duration) OVER (PARTITION BY genre ORDER BY year);
+   ```
 
-Correlations and Trends
-	1.	Hindi Movie Stats
-Compares average duration and ratings of Hindi movies versus others.
-Example: AVG(CASE WHEN languages LIKE '%Hindi%' THEN duration END)
-	2.	Correlation Analysis
-Computes the correlation between total_votes and avg_rating for Hindi movies.
-Example: SUM((votes - avg_votes) * (rating - avg_rating)) / COUNT(*)
+### Correlations and Trends
+1. **Hindi Movie Stats**: Compare Hindi movies vs others.
+   ```sql
+   AVG(CASE WHEN languages LIKE '%Hindi%' THEN duration END);
+   ```
+2. **Correlation Analysis**: Correlate `total_votes` and `avg_rating`.
+   ```sql
+   SUM((votes - avg_votes) * (rating - avg_rating)) / COUNT(*);
+   ```
 
-Production Analysis
-	1.	Top Grossing Movies by Year
-Lists the top 5 highest-grossing movies for the top 3 genres each year.
-Example: ROW_NUMBER() OVER (PARTITION BY year, genre ORDER BY worlwide_gross_income DESC)
-	2.	Consistent High Ratings
-Finds production companies with consistent high ratings (3+ movies rated >= 8.0 from 2017-2019).
-Example: HAVING COUNT(*) = 3
+### Production Analysis
+1. **Top Grossing Movies**: Top 5 grossing movies by year and genre.
+   ```sql
+   ROW_NUMBER() OVER (PARTITION BY year, genre ORDER BY worldwide_gross_income DESC);
+   ```
+2. **Consistent High Ratings**: Companies with 3+ high-rated movies (2017-2019).
+   ```sql
+   HAVING COUNT(*) = 3;
+   ```
 
-Key Techniques Used
-	•	Aggregate Functions: COUNT, AVG, SUM, MIN, MAX
-	•	Window Functions: RANK, ROW_NUMBER, SUM() OVER, AVG() OVER
-	•	Joins: Inner joins between related tables to fetch comprehensive data.
-	•	Subqueries: Extract subsets of data for further analysis.
-	•	Conditional Aggregates: Use of CASE and HAVING for advanced filtering.
+---
 
-This set of queries provides an extensive look into leveraging SQL for analyzing and deriving insights from a complex movie database.
+## Key Techniques Used
+- **Aggregate Functions**: `COUNT`, `AVG`, `SUM`, `MIN`, `MAX`
+- **Window Functions**: `RANK`, `ROW_NUMBER`, `SUM() OVER`
+- **Joins**: Combine related tables for insights.
+- **Subqueries**: Extract subsets of data.
+- **Conditional Aggregates**: `CASE` and `HAVING` for filtering.
 
+---
+
+Use these queries to analyze and derive insights from the IMDb database effectively!
